@@ -32,12 +32,12 @@ int main(int argc, char **argv)
 
 
 
-	ros::Rate loop_rate(1);
+	ros::Rate loop_rate(50);
 
 	int curr_pwm = 0;
 	bool dir = 0;
   	while(ros::ok()) {
-		  ROS_INFO("Spun once.");
+		  //ROS_INFO("Spun once.");
 
 		  srv.request.address = 0;
 
@@ -47,13 +47,13 @@ int main(int argc, char **argv)
 		  if (curr_pwm < 500 && !dir) {
 			  dir = 1;
 		  }
-		  if (dir) curr_pwm += 5;
-		  else curr_pwm-= 5;
+		  if (dir) curr_pwm += 10;
+		  else curr_pwm-= 10;
 
 		  srv.request.request = curr_pwm;
 
 		  if (servo_control.call(srv)) {
-			  ROS_INFO("Success, got: %d", (int)srv.response.response);
+			  ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);
 
 		  }
 		  else {
