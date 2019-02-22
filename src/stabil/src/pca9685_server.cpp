@@ -12,10 +12,10 @@ bool setServo(stabil::PCA9685::Request &req, stabil::PCA9685::Response &res) {
 }
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "pca_9685_server");
+	ros::init(argc, argv, "pca9685_server");
 	ros::NodeHandle n;
 
-	ros::ServiceServer service = n.advertiseService("pca_9685", setServo);
+	ros::ServiceServer service = n.advertiseService("pca9685", setServo);
 
 	pca9685 = new PCA9685();
 	int err = pca9685->openPCA9685();
