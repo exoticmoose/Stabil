@@ -59,7 +59,7 @@ add_executable(control_listener src/control_listener.cpp)
 target_link_libraries(control_listener ${catkin_LIBRARIES})
 add_dependencies(control_listener stabil_gencpp)
 
-add_executable(pca9685_server src/pca9685_server.cpp)
+add_executable(pca9685_server src/pca9685_server.cpp include/JHPWMPCA9685.cpp)
 target_link_libraries(pca9685_server ${catkin_LIBRARIES})
 add_dependencies(pca9685_server stabil_gencpp)
 
