@@ -40,7 +40,7 @@ import rospy
 from std_msgs.msg import String
 
 def callback(data):
-    rospy.loginfo('I heard %s', data.data)
+    rospy.loginfo('I heard you say... %s', data.data)
 
 def listener():
 
