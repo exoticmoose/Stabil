@@ -4,7 +4,7 @@
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
-void chatterCallback(const std_msgs::String::ConstPtr& msg)
+void charCallback(const std_msgs::String::ConstPtr& msg)
 {
   ROS_INFO("I heard: [%s]", msg->data.c_str());
 }
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-  ros::Subscriber sub = n.subscribe("remote_cmd_char", 1000, chatterCallback);
+  ros::Subscriber sub = n.subscribe("remote_cmd_char", 1000, charCallback);
 
   /**
    * ros::spin() will enter a loop, pumping callbacks.  With this version, all
