@@ -1,4 +1,4 @@
-int32 address
-int32 request
+int32[8] address
+int32[8] request
 ---
 int32 response
