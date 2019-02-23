@@ -15,6 +15,7 @@ struct stick_cmd {
 
 struct stick_cmd l_stick, r_stick;
 
+
 void charCallback(const std_msgs::String::ConstPtr& msg)
 {
 	ROS_INFO("I heard: \"%s\" ... data = %d", msg->data.c_str(), atoi(msg->data.c_str()));
@@ -57,12 +58,20 @@ int main(int argc, char **argv)
 
 	ros::Rate loop_rate(20);
 
-	int curr_pwm = 0;
+	int v_x = 0;
+	int v_y = 0;
 	bool dir = 0;
+
+
+	int pwm_req[8];
+
   	while(ros::ok()) {
 		  //ROS_INFO("Spun once.");
 
 		  srv.request.address[0] = 0;
+		  srv.request.address[1] = 2;
+		  srv.request.address[2] = 4;
+		  srv.request.address[3] = 6;
 //
 //		  if (curr_pwm > 2800 && dir) {
 //			  dir = 0;
@@ -73,9 +82,13 @@ int main(int argc, char **argv)
 //		  if (dir) curr_pwm += 32;
 //		  else curr_pwm-= 32;
 
-		  curr_pwm =  1600 + 1200* l_stick.x;
+		  v_x = 1200* l_stick.x;
+		  v_y = 1200* l_stick.y;
 
-		  srv.request.request[0] = curr_pwm;
+		  srv.request.request[0] = 1600 + v_x;
+		  srv.request.request[1] = 1600 - v_x;
+		  srv.request.request[2] = 1600 + v_x;
+		  srv.request.request[3] = 1600 - v_x;
 
 		  if (servo_control.call(srv)) {
 			  //ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);

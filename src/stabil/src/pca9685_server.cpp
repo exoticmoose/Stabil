@@ -6,7 +6,7 @@ PCA9685 *pca9685;
 
 bool setServo(stabil::PCA9685::Request &req, stabil::PCA9685::Response &res) {
 	ROS_INFO("Got request to set servo %d to %d", req.address[0], req.request[0]);
-	pca9685->setPWM(req.address[0], 0, req.request[0]);
+	pca9685->setPWM((int)req.address[0], 0, (int)req.request[0]);
 	return true;
 
 }
