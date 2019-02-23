@@ -22,9 +22,9 @@ void charCallback(const std_msgs::String::ConstPtr& msg)
 }
 
 void twistCallback(const geometry_msgs::Twist &twist) {
-	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
-	ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
-	ROS_INFO("----------------------");
+	//ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+	//ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
+	//ROS_INFO("----------------------");
 
 	l_stick.x = twist.linear.x;
 	l_stick.y = twist.linear.y;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 
 
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(10);
 
 	int v_x = 0;
 	int v_y = 0;

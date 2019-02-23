@@ -39,7 +39,7 @@ TeleopBot::TeleopBot(): linear_(1), angular_(2) {
 
 void TeleopBot::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-	ROS_INFO("Joy callback");
+//ROS_INFO("Joy callback");
   geometry_msgs::Twist twist;
   twist.linear.x = l_scale_*joy->axes[0]; // TODO: angular naming convention
   twist.linear.y = l_scale_*joy->axes[1];
