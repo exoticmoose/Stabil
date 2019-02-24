@@ -1,8 +1,11 @@
-#include <proj_parms.h>
-#include <MyServo.h>
+#include "proj_parms.h"
+#include "MyServo.h"
+#include "ros/ros.h"
+
 
 void MyServo::heartbeat() {
-	Serial.println("I'm Here!");
+	//Serial.println("I'm Here!");
+	ROS_INFO("I'm alive");
 }
 
 
@@ -27,8 +30,8 @@ void MyServo::calcNext() {
 				}
 				else {
 					// - - - - - - -
-					Serial.print("Error - curr_pw vs. goal_pw: ");
-					Serial.print(curr_pw); Serial.print("\t"); Serial.println(goal_pw);
+					//Serial.print("Error - curr_pw vs. goal_pw: ");
+					//Serial.print(curr_pw); Serial.print("\t"); Serial.println(goal_pw);
 					// - - - - - - -
 				}
 			}
@@ -38,9 +41,11 @@ void MyServo::calcNext() {
 void MyServo::sendNext() {
 			
 			if (curr_pw != next_pw) {
-				Serial.print("Setting PWM on \t"); Serial.print(my_id); 
-				Serial.print("\t to: \t"); Serial.println(next_pw);
-				servo_pwm.setPWM(my_id, 0, next_pw);
+				//Serial.print("Setting PWM on \t"); Serial.print(my_id);
+				//Serial.print("\t to: \t"); Serial.println(next_pw);
+				//servo_pwm.setPWM(my_id, 0, next_pw);
+				srv.request.request[my_id] = next_pw;
+				ROS_INFO("Sending next=%d for %d", next_pw, my_id);
 				curr_pw = next_pw;
 			}
 			

@@ -55,7 +55,7 @@ add_executable(network_server src/network_server.cpp)
 target_link_libraries(network_server ${catkin_LIBRARIES})
 add_dependencies(network_server stabil_gencpp)
 
-add_executable(control_listener src/control_listener.cpp)
+add_executable(control_listener src/control_listener.cpp src/MyServo.cpp)
 target_link_libraries(control_listener ${catkin_LIBRARIES})
 add_dependencies(control_listener stabil_gencpp)
 

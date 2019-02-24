@@ -5,6 +5,7 @@
 #include "stabil/PCA9685.h"
 #include <geometry_msgs/Twist.h>
 #include <cstdlib>
+#include "MyServo.h"
 
 
 struct stick_cmd {
@@ -15,6 +16,12 @@ struct stick_cmd {
 
 struct stick_cmd l_stick, r_stick;
 
+stabil::PCA9685 srv;
+
+MyServo servo_fl = MyServo(0, 2500, 500, 90, 0);
+MyServo servo_fr = MyServo(2, 2500, 500, 90, 1);
+MyServo servo_rl = MyServo(4, 2500, 500, 90, 0);
+MyServo servo_rr = MyServo(6, 2500, 500, 90, 1);
 
 void charCallback(const std_msgs::String::ConstPtr& msg)
 {
@@ -51,12 +58,14 @@ int main(int argc, char **argv)
 	ros::NodeHandle clientNode;
 	ros::ServiceClient servo_control = clientNode.serviceClient<stabil::PCA9685>("pca9685");
 
-	stabil::PCA9685 srv;
+
+	srv.request.address[0] = 0;
+	srv.request.address[1] = 2;
+	srv.request.address[2] = 4;
+	srv.request.address[3] = 6;
 
 
-
-
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(20);
 
 	int v_x = 0;
 	int v_y = 0;
@@ -65,30 +74,27 @@ int main(int argc, char **argv)
 
 	int pwm_req[8];
 
+	ROS_INFO("Starting main loop");
   	while(ros::ok()) {
-		  //ROS_INFO("Spun once.");
+		  ROS_INFO("Spun once.");
 
-		  srv.request.address[0] = 0;
-		  srv.request.address[1] = 2;
-		  srv.request.address[2] = 4;
-		  srv.request.address[3] = 6;
-//
-//		  if (curr_pwm > 2800 && dir) {
-//			  dir = 0;
-//		  }
-//		  if (curr_pwm < 500 && !dir) {
-//			  dir = 1;
-//		  }
-//		  if (dir) curr_pwm += 32;
-//		  else curr_pwm-= 32;
+
 
 		  v_x = 1200* l_stick.x;
 		  v_y = 1200* l_stick.y;
 
-		  srv.request.request[0] = 1600 + v_x;
-		  srv.request.request[1] = 1600 - v_x;
-		  srv.request.request[2] = 1600 + v_x;
-		  srv.request.request[3] = 1600 - v_x;
+		  servo_fl.setGoal((unsigned short) v_x);
+
+		  servo_fl.calcNext();
+
+		  servo_fl.sendNext();
+
+
+
+//		  srv.request.request[0] = 1600 + v_x;
+//		  srv.request.request[1] = 1600 - v_x;
+//		  srv.request.request[2] = 1600 + v_x;
+//		  srv.request.request[3] = 1600 - v_x;
 
 		  if (servo_control.call(srv)) {
 			  //ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);
