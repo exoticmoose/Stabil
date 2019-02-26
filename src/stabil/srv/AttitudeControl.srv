@@ -1,0 +1,7 @@
+float64 jx
+float64 jy
+geometry_msgs/Point offset
+QuadFloat ground
+---
+geometry_msgs/Point[4] contact
+QuadFloat theta

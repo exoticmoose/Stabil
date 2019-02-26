@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -14,28 +15,38 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Num.msg
+  QuadFloat.msg
 )
+
+
 
 ## Generate services in the 'srv' folder
  add_service_files(
-   FILES AddTwoInts.srv ServoServer.srv PCA9685.srv
+   FILES
+   AddTwoInts.srv
+   ServoServer.srv
+   PCA9685.srv
+   AttitudeControl.srv
  )
-
  generate_messages(
    DEPENDENCIES
+   geometry_msgs
    std_msgs
+   
  )
+
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES stabil
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 	CATKIN_DEPENDS message_runtime
 )
 
 include_directories(
 # include
+  src/matlab_codegen
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -55,7 +66,7 @@ add_executable(network_server src/network_server.cpp)
 target_link_libraries(network_server ${catkin_LIBRARIES})
 add_dependencies(network_server stabil_gencpp)
 
-add_executable(control_listener src/control_listener.cpp src/MyServo.cpp)
+add_executable(control_listener src/control_listener.cpp src/servo.cpp)
 target_link_libraries(control_listener ${catkin_LIBRARIES})
 add_dependencies(control_listener stabil_gencpp)
 
@@ -63,9 +74,23 @@ add_executable(teleop_bot src/teleop_bot.cpp)
 target_link_libraries(teleop_bot ${catkin_LIBRARIES})
 add_dependencies(teleop_bot stabil_gencpp)
 
-add_executable(pca9685_server src/pca9685_server.cpp include/JHPWMPCA9685.cpp)
+add_executable(pca9685_server src/pca9685_server.cpp src/JHPWMPCA9685.cpp)
 target_link_libraries(pca9685_server ${catkin_LIBRARIES})
 add_dependencies(pca9685_server stabil_gencpp)
+
+add_executable(
+	limbPose src/limbPose.cpp 
+	src/matlab_codegen/simpleLegAngle_terminate.cpp
+	src/matlab_codegen/simpleLegAngle_initialize.cpp
+	src/matlab_codegen/simpleLegAngle.cpp
+	src/matlab_codegen/rt_nonfinite.cpp
+	src/matlab_codegen/rtGetNaN.cpp
+	src/matlab_codegen/rtGetInf.cpp
+)
+target_link_libraries(limbPose ${catkin_LIBRARIES})
+add_dependencies(limbPose stabil_gencpp)
+
+
 
 
 

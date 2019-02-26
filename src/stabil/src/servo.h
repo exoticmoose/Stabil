@@ -2,14 +2,12 @@
 #define MYSERVO_H
 // ------------------------------------------- MYSERVO_H
 
-#include "stabil/PCA9685.h"
 
-extern stabil::PCA9685 srv;
 
-class MyServo {
+class servo {
 	public:
 
-		MyServo(unsigned char id, unsigned short max, unsigned short min, float arc, bool direction) {
+		servo(unsigned char id, unsigned short max, unsigned short min, float arc, bool direction) {
 			my_id = id;
 			my_max = max;
 			my_min = min;
