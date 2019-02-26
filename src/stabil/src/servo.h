@@ -9,11 +9,11 @@ class servo {
 
 		servo(unsigned char id, unsigned short max, unsigned short min, float arc, bool direction) {
 			my_id = id;
-			my_max = max;
+			my_max = max; //in nanosecond on-time
 			my_min = min;
-			my_arc = arc;
+			my_arc = arc; // in rads
 			my_direction = direction;
-			degree_pw = (my_max - my_min) / my_arc;
+			angular_pw = (my_max - my_min) / my_arc;
 			goal_pw = 0;
 			next_pw = 0;
 			curr_pw = 0;
@@ -40,7 +40,7 @@ class servo {
 		float my_arc; // total movement range in degrees
 		bool my_direction;
 		
-		float degree_pw;
+		float angular_pw;
 
 		float goal_angle;
 		unsigned short goal_pw;

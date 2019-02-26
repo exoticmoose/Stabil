@@ -1,5 +1,5 @@
 
-#define BIG_STEP 40
+#define BIG_STEP 35
 #define SMALL_STEP 10
 
 #include "ros/ros.h"
@@ -64,7 +64,7 @@ unsigned short servo::getCurr() {return curr_pw;}
 
 void servo::setGoalAngle(float angle) {
 	goal_angle = angle;
-	setGoal(my_direction ? my_max - (angle * degree_pw) : my_min + (angle * degree_pw));
+	setGoal(my_direction ? my_max - (angle * angular_pw) : my_min + (angle * angular_pw));
 
 }
 

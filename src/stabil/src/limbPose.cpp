@@ -80,18 +80,21 @@ bool calcPose(stabil::AttitudeControl::Request &req, stabil::AttitudeControl::Re
 	double theta[4];
 	double pos[12];
 
+	simpleLegAngle(req.jx, req.jy, dv0, dv1, theta, pos);
+
 	res.theta.f0 = theta[0];
 	res.theta.f1 = theta[1];
 	res.theta.f2 = theta[2];
 	res.theta.f3 = theta[3];
 
-	geometry_msgs::Point tmp;
 
-	for (uint8_t i = 0; i < 10; i = i + 3) {
+	geometry_msgs::Point tmp;
+	for (uint8_t i = 0; i < 4; i++) {
 		tmp.x = pos[i];
-		tmp.y = pos[i + 1];
-		tmp.z = pos[i + 2];
-		ROS_INFO("Corner %d: (x: %f, y:%f, z:%f)", i, tmp.x, tmp.y, tmp.z);
+		tmp.y = pos[i + 4];
+		tmp.z = pos[i + 8];
+		ROS_INFO("Corner: %d (x: %f, y:%f, z:%f)", i, tmp.x, tmp.y, tmp.z);
+		res.contact[i] = tmp;
 	}
 
 	return true;
