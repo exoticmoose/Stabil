@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	else {
 		  pca9685->setAllPWM(0,0);
 		  pca9685->reset();
-		  pca9685->setPWMFrequency(250);
+                  pca9685->setPWMFrequency(250);
 		  ROS_INFO("PCA9685 Connection Successful.");
 	}
 
