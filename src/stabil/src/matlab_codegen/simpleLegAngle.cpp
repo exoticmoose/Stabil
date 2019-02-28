@@ -11,13 +11,13 @@
 
 /* Include files */
 #include <cmath>
-#include <math.h>
 #include "rt_nonfinite.h"
 #include "simpleLegAngle.h"
 
 /* Function Definitions */
 void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
-                    double ground_z[4], double theta[4], double pos[12])
+                    double ground_z[4], double leg_length, double wheel_radius,
+                    double theta[4], double pos[12])
 {
   double body_angle_y;
   double body_angle_x;
@@ -30,7 +30,8 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
 
   int idx;
   double b_Rx[9];
-  double bod_coords[12];
+  double z_depth[4];
+  double body_plane[12];
   int k;
   bool exitg1;
   double max_z;
@@ -45,18 +46,12 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
 
   static const signed char c_b[3] = { 0, 0, 1 };
 
-  /* --------------------------------------------------- start setup */
   /* ------ start physical parms */
   /*  divide by 2 for center offset */
-  /* ----- end physical parms */
   /* ----- declared variables */
-  /* ----- end variables */
-  /* --------------------------------------------------- end setup */
   /*  get desired body plane orientation */
-  body_angle_y = std::atan(jsx / 2.0 / 1.7320508075688772);
-  body_angle_x = std::atan(jsy / 2.0 / 1.7320508075688772);
-
-  /* x and y angles  */
+  body_angle_y = std::atan(jsx / 6.0 / 1.7320508075688772);
+  body_angle_x = std::atan(jsy / 6.0 / 1.7320508075688772);
   Rx[1] = 0.0;
   Rx[4] = std::cos(body_angle_x);
   Rx[7] = -std::sin(body_angle_x);
@@ -83,26 +78,27 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
     }
 
     for (idx = 0; idx < 4; idx++) {
-      bod_coords[i0 + 3 * idx] = 0.0;
+      body_plane[i0 + 3 * idx] = 0.0;
       for (k = 0; k < 3; k++) {
-        bod_coords[i0 + 3 * idx] += b_Rx[i0 + 3 * k] * b[k + 3 * idx];
+        body_plane[i0 + 3 * idx] += b_Rx[i0 + 3 * k] * b[k + 3 * idx];
       }
     }
   }
 
-  /*  bod_coords = Ry * bod_coords */
+  /*  limit body to realistic space */
   for (i0 = 0; i0 < 4; i0++) {
-    bod_coords[2 + 3 * i0] += offset_z[2];
+    body_plane[2 + 3 * i0] += offset_z[2];
+    z_depth[i0] = body_plane[2 + 3 * i0] - ground_z[i0];
   }
 
-  if (!rtIsNaN(bod_coords[2])) {
+  if (!rtIsNaN(z_depth[0])) {
     idx = 1;
   } else {
     idx = 0;
     k = 2;
     exitg1 = false;
     while ((!exitg1) && (k < 5)) {
-      if (!rtIsNaN(bod_coords[2 + 3 * (k - 1)])) {
+      if (!rtIsNaN(z_depth[k - 1])) {
         idx = k;
         exitg1 = true;
       } else {
@@ -112,23 +108,59 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
   }
 
   if (idx == 0) {
-    max_z = bod_coords[2];
+    max_z = z_depth[0];
   } else {
-    max_z = bod_coords[2 + 3 * (idx - 1)];
+    max_z = z_depth[idx - 1];
     while (idx + 1 < 5) {
-      if (max_z < bod_coords[2 + 3 * idx]) {
-        max_z = bod_coords[2 + 3 * idx];
+      if (max_z < z_depth[idx]) {
+        max_z = z_depth[idx];
       }
 
       idx++;
     }
   }
 
-  body_angle_x = 8.0 * std::cos(body_angle_y) + 3.5;
+  body_angle_x = leg_length * std::cos(body_angle_y) + wheel_radius;
   if (max_z > body_angle_x) {
     max_z -= body_angle_x;
     for (i0 = 0; i0 < 4; i0++) {
-      bod_coords[2 + 3 * i0] -= max_z;
+      body_plane[2 + 3 * i0] -= max_z;
+    }
+  }
+
+  if (!rtIsNaN(z_depth[0])) {
+    idx = 1;
+  } else {
+    idx = 0;
+    k = 2;
+    exitg1 = false;
+    while ((!exitg1) && (k < 5)) {
+      if (!rtIsNaN(z_depth[k - 1])) {
+        idx = k;
+        exitg1 = true;
+      } else {
+        k++;
+      }
+    }
+  }
+
+  if (idx == 0) {
+    body_angle_x = z_depth[0];
+  } else {
+    body_angle_x = z_depth[idx - 1];
+    while (idx + 1 < 5) {
+      if (body_angle_x > z_depth[idx]) {
+        body_angle_x = z_depth[idx];
+      }
+
+      idx++;
+    }
+  }
+
+  if (body_angle_x < wheel_radius) {
+    for (i0 = 0; i0 < 4; i0++) {
+      body_plane[2 + 3 * i0] = (body_plane[2 + 3 * i0] - body_angle_x) +
+        wheel_radius;
     }
   }
 
@@ -170,12 +202,21 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
       }
     }
 
-    body_angle_x = std::acos(((3.5 + ground_z[k]) - bod_coords[2 + 3 * k]) / 8.0
-      / std::sqrt(U_0[2] * U_0[2] + -N[2] * -N[2])) + -std::atan(-N[2] / U_0[2]);
-    body_angle_y = 8.0 * std::cos(body_angle_x);
-    max_z = 8.0 * std::sin(body_angle_x);
+    body_angle_x = ((wheel_radius + ground_z[k]) - body_plane[2 + 3 * k]) /
+      leg_length / std::sqrt(U_0[2] * U_0[2] + -N[2] * -N[2]);
+    if (body_angle_x >= 1.0) {
+      body_angle_x = 0.9999999;
+    }
+
+    if (body_angle_x <= -1.0) {
+      body_angle_x = -0.9999999;
+    }
+
+    body_angle_x = std::acos(body_angle_x) + -std::atan(-N[2] / U_0[2]);
+    body_angle_y = leg_length * std::cos(body_angle_x);
+    max_z = leg_length * std::sin(body_angle_x);
     for (i0 = 0; i0 < 3; i0++) {
-      pos[k + (i0 << 2)] = (bod_coords[i0 + 3 * k] + body_angle_y * U_0[i0]) +
+      pos[k + (i0 << 2)] = (body_plane[i0 + 3 * k] + body_angle_y * U_0[i0]) +
         max_z * N[i0];
     }
 
@@ -186,21 +227,18 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
   /* --------------------------------------------------- end calculation */
   /*  Start pose viz */
   /*  zero_plane = [25 25 0; -25 25 0; -25 -25 0; 25 -25 0]'; */
-  /*  max_plane = [20 25 L+r; -20 25 L+r; -20 -25 L+r; 20 -25 L+r]'; */
   /*  wheel_plane = [K(1, 1) K(1, 2) r; K(2, 1) K(2, 2) r; K(3, 1) K(3, 2) r; K(4, 1) K(4, 2) r]'; */
   /*  wheel_plane(3, :) = wheel_plane(3, :) + ground_z */
   /*   */
   /*  clf */
-  /*  fill3(bod_coords(1, :), bod_coords(2, :), bod_coords(3, :), 'r') */
+  /*  fill3(body_plane(1, :), body_plane(2, :), body_plane(3, :), 'r') */
   /*  hold on */
   /*   */
   /*  floor_limit = fill3(zero_plane(1, :), zero_plane(2, :), zero_plane(3, :), 'b'); */
-  /*  z_limit = fill3(max_plane(1, :), max_plane(2, :), max_plane(3, :), 'g'); */
-  /*  alpha(z_limit, 0.2); */
   /*  wheel_limit = fill3(wheel_plane(1, :), wheel_plane(2, :), wheel_plane(3, :), 'g'); */
   /*  alpha(wheel_limit, 0.2); */
   /*   */
-  /*  P(P==0)=NaN */
+  /*  P(P==0)=NaN; */
   /*  for i = 1:4 */
   /*      tmp = squeeze(P(i,:, :)); */
   /*      plot3(tmp(1,:), tmp(2,:), tmp(3,:)); */
@@ -209,12 +247,9 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
   /*   */
   /*  axis([-25, 25, -25, 25, 0, 50]) */
   /*  axis vis3d */
+  /*  xlabel('X') */
+  /*  ylabel('Y') */
   /*  rotate3d on */
-  /*   */
-  /*  theta; */
-  /*  pos = K; */
-  /*   */
-  /*  end */
 }
 
 /* End of code generation (simpleLegAngle.cpp) */

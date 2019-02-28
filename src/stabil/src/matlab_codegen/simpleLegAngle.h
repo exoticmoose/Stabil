@@ -20,7 +20,8 @@
 
 /* Function Declarations */
 extern void simpleLegAngle(double jsx, double jsy, const double offset_z[3],
-  const double ground_z[4], double theta[4], double pos[12]);
+  const double ground_z[4], double leg_length, double wheel_radius, double
+  theta[4], double pos[12]);
 
 #endif
 

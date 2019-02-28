@@ -23,10 +23,10 @@ struct stick_cmd l_stick, r_stick;
 stabil::PCA9685 srv;
 stabil::AttitudeControl attcon;
 
-servo servo_fl = servo(0, 2800, 500, 1.5 * PI, 0);
-servo servo_fr = servo(2, 2800, 500, 1.5 * PI, 1);
-servo servo_rl = servo(4, 2800, 500, 1.5 * PI, 0);
-servo servo_rr = servo(6, 2800, 500, 1.5 * PI, 1);
+servo servo_fl = servo(0, 2800, 500, 1.5 * PI, 1);
+servo servo_fr = servo(2, 2800, 500, 1.5 * PI, 0);
+servo servo_rl = servo(4, 2800, 500, 1.5 * PI, 1);
+servo servo_rr = servo(6, 2800, 500, 1.5 * PI, 0);
 
 void charCallback(const std_msgs::String::ConstPtr& msg)
 {
@@ -34,9 +34,9 @@ void charCallback(const std_msgs::String::ConstPtr& msg)
 }
 
 void twistCallback(const geometry_msgs::Twist &twist) {
-	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+	//ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
 	//ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
-	ROS_INFO("----------------------");
+	//ROS_INFO("----------------------");
 
 	l_stick.x = twist.linear.x;
 	l_stick.y = twist.linear.y;
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 	geometry_msgs::Point offset;
 	offset.x = 0;
 	offset.y = 0;
-	offset.z = 4;
+	offset.z = 10;
 
 	ros::Rate loop_rate(50);
 
@@ -99,10 +99,10 @@ int main(int argc, char **argv)
 		  //ROS_INFO("Spun once.");
 
 
-  		  attcon.request.jx = l_stick.x;//bufferAverage(l_stick.x, jxBufferIdx, jxBuffer);
-  		  attcon.request.jy = l_stick.y;//bufferAverage(l_stick.y, jyBufferIdx, jyBuffer);
+  		  attcon.request.jx = fabs(l_stick.x) < 0.1 ? 0 : l_stick.x;//bufferAverage(l_stick.x, jxBufferIdx, jxBuffer);
+  		  attcon.request.jy = fabs(l_stick.y) < 0.1 ? 0 : l_stick.y;//bufferAverage(l_stick.y, jyBufferIdx, jyBuffer);
   		  //ROS_INFO("%f and %f", attcon.request.jx, attcon.request.jy);
-  		  offset.y = 3 + 2 * r_stick.y;
+  		  offset.z = 5 + 5 * r_stick.y;
   		  attcon.request.offset = offset;
 
   		  attcon.request.ground.f0 = 0;
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 			  //every 4 actually do the calculations
 			  if (limb_pose.call(attcon)) {
 				  //ROS_INFO("We heard back!");
-				  //ROS_INFO("Thetas: %f, %f, %f, %f", attcon.response.theta.f0, attcon.response.theta.f1, attcon.response.theta.f2, attcon.response.theta.f3);
+				  ROS_INFO("Thetas: %f, %f, %f, %f", attcon.response.theta.f0, attcon.response.theta.f1, attcon.response.theta.f2, attcon.response.theta.f3);
 				  for (int i = 0; i < 4; i++) {
 					  //ROS_INFO("Contact %d: (%f, %f, %f)", i, attcon.response.contact.at(i).x, attcon.response.contact.at(i).y, attcon.response.contact.at(i).z);
 				  }
@@ -131,6 +131,11 @@ int main(int argc, char **argv)
 		  servo_fr.setGoalAngle(attcon.response.theta.f1);
 		  servo_rl.setGoalAngle(attcon.response.theta.f2);
 		  servo_rr.setGoalAngle(attcon.response.theta.f3);
+
+//		  servo_fl.setGoalAngle(0);
+//		  servo_fr.setGoalAngle(0);
+//		  servo_rl.setGoalAngle(0);
+//		  servo_rr.setGoalAngle(0);
 
 		  servo_fl.calcNext();
 		  servo_fr.calcNext();

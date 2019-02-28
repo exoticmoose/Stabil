@@ -19,10 +19,6 @@ void servo::heartbeat() {
 
 
 void servo::calcNext() {
-			//Serial.print("calcNext Called - curr_pw vs. goal_pw: ");
-			//Serial.print(curr_pw); Serial.print("\t"); Serial.println(goal_pw);
-			
-
 
 			if (curr_pw != goal_pw) {
 				// If undershooting goal, move closer by BIG_STEP until starting to move by 10 when close
@@ -36,22 +32,12 @@ void servo::calcNext() {
 					else if (curr_pw - SMALL_STEP > goal_pw) next_pw = curr_pw - SMALL_STEP;
 					else next_pw = goal_pw;
 				}
-				else {
-					// - - - - - - -
-					//Serial.print("Error - curr_pw vs. goal_pw: ");
-					//Serial.print(curr_pw); Serial.print("\t"); Serial.println(goal_pw);
-					// - - - - - - -
-				}
 			}
-			// else, we are already where we want to be.
 		}
 
 void servo::sendNext() {
 			
 			if (curr_pw != next_pw) {
-				//Serial.print("Setting PWM on \t"); Serial.print(my_id);
-				//Serial.print("\t to: \t"); Serial.println(next_pw);
-				//servo_pwm.setPWM(my_id, 0, next_pw);
 				srv.request.request[my_id / 2] = next_pw; //TODO address <--> id mapping
 				ROS_INFO("Sending next=%d for %d", next_pw, my_id);
 				curr_pw = next_pw;
