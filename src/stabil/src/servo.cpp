@@ -1,4 +1,3 @@
-
 #define BIG_STEP 35
 #define SMALL_STEP 10
 

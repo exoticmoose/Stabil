@@ -27,6 +27,7 @@ add_message_files(
    ServoServer.srv
    PCA9685.srv
    AttitudeControl.srv
+   IMUEffort.srv
  )
  generate_messages(
    DEPENDENCIES
@@ -47,6 +48,7 @@ catkin_package(
 include_directories(
 # include
   src/matlab_codegen
+  include/stabil
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -58,9 +60,6 @@ add_executable(listener src/listener.cpp)
 target_link_libraries(listener ${catkin_LIBRARIES})
 add_dependencies(listener stabil_generate_messages_cpp)
 
-add_executable(servo_client src/servo_client.cpp)
-target_link_libraries(servo_client ${catkin_LIBRARIES})
-add_dependencies(servo_client stabil_gencpp)
 
 add_executable(network_server src/network_server.cpp)
 target_link_libraries(network_server ${catkin_LIBRARIES})
@@ -79,16 +78,17 @@ target_link_libraries(pca9685_server ${catkin_LIBRARIES})
 add_dependencies(pca9685_server stabil_gencpp)
 
 add_executable(
-	limbPose src/limbPose.cpp 
+	matlab_service src/matlab_service.cpp
 	src/matlab_codegen/simpleLegAngle_terminate.cpp
 	src/matlab_codegen/simpleLegAngle_initialize.cpp
 	src/matlab_codegen/simpleLegAngle.cpp
+	src/matlab_codegen/tiltBalance.cpp
 	src/matlab_codegen/rt_nonfinite.cpp
 	src/matlab_codegen/rtGetNaN.cpp
 	src/matlab_codegen/rtGetInf.cpp
 )
-target_link_libraries(limbPose ${catkin_LIBRARIES})
-add_dependencies(limbPose stabil_gencpp)
+target_link_libraries(matlab_service ${catkin_LIBRARIES})
+add_dependencies(matlab_service stabil_gencpp)
 
 
 

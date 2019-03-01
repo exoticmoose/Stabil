@@ -1,27 +1,28 @@
 #include "rt_nonfinite.h"
-#include "limbPose.h"
 #include "simpleLegAngle.h"
 #include "simpleLegAngle_terminate.h"
 #include "simpleLegAngle_initialize.h"
+#include "tiltBalance.h"
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
 #include "stabil/QuadFloat.h"
 #include "stabil/AttitudeControl.h"
+#include "stabil/IMUEffort.h"
 
-/* Function Declarations */
-static double argInit_real_T();
-static void main_simpleLegAngle();
+#define LEG_LENGTH 14.0
+#define WHEEL_RADIUS 4.0
+#define BODY_DIM_X 25.0
+#define BODY_DIM_Y 21.0
 
-/* Function Definitions */
 
 
-static void main_simpleLegAngle()
+void main_simpleLegAngle()
 {
-  double dv0[3] = {0.0, 0.0, 7.0};
-  double dv1[4] = {0.0, 0.0, 0.0, 0.0};
-  double leg = 7.0;
-  double radius = 1.0;
+  double body_offset[3] = {0.0, 0.0, 7.0};
+  double ground_z[4] = {0.0, 0.0, 0.0, 0.0};
+  double leg = LEG_LENGTH;
+  double radius = WHEEL_RADIUS;
   double theta[4];
   double pos[12];
 
@@ -30,9 +31,26 @@ static void main_simpleLegAngle()
   /* Initialize function input argument 'ground_z'. */
   /* Call the entry-point 'simpleLegAngle'. */
 
-  simpleLegAngle(0.0, 0.0, dv0, dv1, leg, radius, theta, pos);
+  simpleLegAngle(0.0, 0.0, body_offset, ground_z, leg, radius, theta, pos);
 
-  ROS_INFO("Thetas = %f, %f, %f, %f", theta[0], theta[1], theta[2], theta[3]);
+  ROS_INFO("Basic Thetas = %f, %f, %f, %f", theta[0], theta[1], theta[2], theta[3]);
+}
+
+void main_tiltBalance() {
+	double x = 0;
+	double y = 1;
+	double z = 0;
+	double Dx = BODY_DIM_X;
+	double Dy = BODY_DIM_Y;
+
+	double w0;
+	double w1;
+	double w2;
+	double w3;
+
+	tiltBalance(x, y, z, Dx, Dy, &w0, &w1, &w2, &w3);
+	ROS_INFO("Basic efforts = %f, %f, %f, %f", w0, w1, w2, w3);
+
 }
 
 bool calcPose(stabil::AttitudeControl::Request &req, stabil::AttitudeControl::Response &res) {
@@ -64,6 +82,15 @@ bool calcPose(stabil::AttitudeControl::Request &req, stabil::AttitudeControl::Re
 
 	return true;
 }
+
+bool calcGround(stabil::IMUEffort::Request &req, stabil::IMUEffort::Response &res) {
+
+	tiltBalance(req.x, req.y, 0, BODY_DIM_X, BODY_DIM_Y, &res.w.f0, &res.w.f1, &res.w.f2, &res.w.f3 );
+
+	return true;
+}
+
+
 int main(int argc, char** argv)
 {
   simpleLegAngle_initialize();
@@ -72,10 +99,14 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "limb_pose");
 
   ros::NodeHandle n;
-  ros::ServiceServer serve = n.advertiseService("limb_pose", calcPose);
+  ros::ServiceServer limb_pose = n.advertiseService("limb_pose", calcPose);
+  ros::ServiceServer ground_calc = n.advertiseService("ground_calc", calcGround);
+  //ros::Subscriber imuProcess
+
 
 
   main_simpleLegAngle();
+  main_tiltBalance();
 
   ros::spin();
 
