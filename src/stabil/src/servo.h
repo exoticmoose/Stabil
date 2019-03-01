@@ -16,8 +16,8 @@ class servo {
 			angular_pw = (my_max - my_min) / my_arc;
 			goal_pw = 0;
 			next_pw = 0;
-			curr_pw = 0;
-			goal_angle = 0;
+			curr_pw = direction ? 2000 : 1300;
+			goal_angle = 1.6;
 			//ROS_INFO("Servo created.");
 		}
 

@@ -11,6 +11,7 @@
 #include <sensor_msgs/Imu.h>
 #include <cstdlib>
 
+
 #include "servo.h"
 #include "control_listener.h"
 
@@ -28,16 +29,17 @@ stabil::PCA9685 srv;
 stabil::AttitudeControl attcon;
 stabil::IMUEffort effort;
 
-servo servo_fl = servo(0, 2800, 500, 1.5 * PI, 1);
-servo servo_fr = servo(2, 2800, 500, 1.5 * PI, 0);
-servo servo_rl = servo(4, 2800, 500, 1.5 * PI, 1);
-servo servo_rr = servo(6, 2800, 500, 1.5 * PI, 0);
+servo servo_fl = servo(0, 2800, 550, 1.5 * PI, 1);
+servo servo_fr = servo(2, 2850, 450, 1.5 * PI, 0);
+servo servo_rl = servo(4, 2780, 440, 1.5 * PI, 1);
+servo servo_rr = servo(6, 2800, 550, 1.5 * PI, 0);
 
 class stabilBody {
 
 	private:
 		void imuCallback(const sensor_msgs::Imu::ConstPtr& imu);
-
+		void pidCallbackX(const std_msgs::Float64 &val);
+		void pidCallbackY(const std_msgs::Float64 &val);
 		ros::NodeHandle nh_;
 		ros::Subscriber imu_sub_;
 
@@ -45,6 +47,15 @@ class stabilBody {
 		stabilBody();
 		ros::ServiceClient limb_pose_;
 		ros::ServiceClient ground_calc_;
+		ros::Subscriber pid_x_;
+		ros::Subscriber pid_y_;
+		ros::Publisher body_latitude_;
+		ros::Publisher body_longitude_;
+		ros::Publisher body_setpoint_x_;
+		ros::Publisher body_setpoint_y_;
+
+		double control_effort_x;
+		double control_effort_y;
 };
 
 stabilBody::stabilBody() {
@@ -52,7 +63,13 @@ stabilBody::stabilBody() {
 
 	limb_pose_ = nh_.serviceClient<stabil::AttitudeControl>("limb_pose");
 	ground_calc_ = nh_.serviceClient<stabil::IMUEffort>("ground_calc");
-	imu_sub_ = nh_.subscribe("imu", 100, &stabilBody::imuCallback, this);
+	imu_sub_ = nh_.subscribe("imu/data_raw", 100, &stabilBody::imuCallback, this);
+	body_latitude_ = nh_.advertise<std_msgs::Float64>("body_latitude", 100);
+	body_longitude_ = nh_.advertise<std_msgs::Float64>("body_longitude", 100);
+	body_setpoint_x_ = nh_.advertise<std_msgs::Float64>("body_setpoint_x", 100);
+	body_setpoint_y_ = nh_.advertise<std_msgs::Float64>("body_setpoint_y", 100);
+	pid_x_ = nh_.subscribe("/tilt_x/control_effort", 1, &stabilBody::pidCallbackX, this);
+	pid_y_ = nh_.subscribe("/tilt_y/control_effort", 1, &stabilBody::pidCallbackY, this);
 
 }
 
@@ -78,8 +95,19 @@ void twistCallback(const geometry_msgs::Twist &twist) {
 
 void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
 	//ROS_INFO("Control listener got IMU Data");
+
 	effort.request.x = imu->orientation.x;
 	effort.request.y = imu->orientation.y;
+	ROS_INFO("eff req = %f \t %f", effort.request.x, effort.request.y);
+}
+
+void stabilBody::pidCallbackX(const std_msgs::Float64 &val) {
+	control_effort_x = val.data;
+	ROS_INFO("Got control effort on X");
+}
+
+void stabilBody::pidCallbackY(const std_msgs::Float64 &val) {
+	control_effort_y = val.data;
 }
 
 int main(int argc, char **argv)
@@ -93,8 +121,7 @@ int main(int argc, char **argv)
 	ros::Subscriber twist_sub_ = n.subscribe("cmd_vel", 1000, twistCallback);
 
 
-//	ros::Publisher body_latitude = n.advertise<std_msgs::Float64>("body_latitude", 100);
-//	ros::Publisher body_longitude = n.advertise<std_msgs::Float64>("body_longitude", 100);
+
 
 
 	ros::NodeHandle clientNode;
@@ -111,7 +138,8 @@ int main(int argc, char **argv)
 	geometry_msgs::Point offset;
 	offset.x = 0;
 	offset.y = 0;
-	offset.z = 10;
+	offset.z = 0;
+	r_stick.z = 1;
 
 	ros::Rate loop_rate(100);
 
@@ -122,15 +150,28 @@ int main(int argc, char **argv)
 
 	int pwm_req[8];
 
+	double jsx;
+	double jsy;
+	std_msgs::Float64 spx;
+	std_msgs::Float64 spy;
+
 	ROS_INFO("Starting main loop");
   	while(ros::ok()) {
-		  ROS_INFO("Spun once: Loop start.");
+		  //ROS_INFO("Spun once: Loop start.");
+  		  jsx = fabs(l_stick.x) < 0.05 ? 0 : l_stick.x;
+		  jsy = fabs(l_stick.y) < 0.05 ? 0 : l_stick.y;
+
+		  spx.data = 0;//atan(jsx / 6.0 / 1.7320508075688772);
+  		  spy.data = 0;//atan(jsy / 6.0 / 1.7320508075688772);
+
+  		  stabil.body_setpoint_x_.publish(spx);
+  		  stabil.body_setpoint_y_.publish(spy);
 
 
-  		  attcon.request.jx = fabs(l_stick.x) < 0.1 ? 0 : l_stick.x;//bufferAverage(l_stick.x, jxBufferIdx, jxBuffer);
-  		  attcon.request.jy = fabs(l_stick.y) < 0.1 ? 0 : l_stick.y;//bufferAverage(l_stick.y, jyBufferIdx, jyBuffer);
+  		  attcon.request.jx = 0;//stabil.control_effort_x;//bufferAverage(l_stick.x, jxBufferIdx, jxBuffer);
+  		  attcon.request.jy = -1 * stabil.control_effort_y;//bufferAverage(l_stick.y, jyBufferIdx, jyBuffer);
   		  //ROS_INFO("%f and %f", attcon.request.jx, attcon.request.jy);
-  		  offset.z = 5 + 5 * r_stick.z;
+  		  offset.z = 8 + (-8 * r_stick.z);
   		  attcon.request.offset = offset;
 
 //  		  attcon.request.ground.f0 = 0;
@@ -142,14 +183,21 @@ int main(int argc, char **argv)
 		  counter++;
 		  if (!(counter % 2)) {
 			  //every 2 actually do the calculations
-	  		  ROS_INFO("Start calcs");
+	  		  //ROS_INFO("Start calcs");
 			  if (stabil.ground_calc_.call(effort)) {
 	  			//ROS_INFO("Got efforts: %f \t %f \t %f \t %f", effort.response.w.f0, effort.response.w.f1, effort.response.w.f2, effort.response.w.f3);
 
-	  			attcon.request.ground.f0 = effort.response.w.f0;
-				attcon.request.ground.f1 = effort.response.w.f1;
-				attcon.request.ground.f2 = effort.response.w.f2;
-				attcon.request.ground.f3 = effort.response.w.f3;
+	  			//double hyp = sqrt(effort.request.x * effort.request.x + effort.request.y * effort.request.y);
+//	  			attcon.request.ground.f0 = -5 * effort.response.w.f0 * hyp;
+//				attcon.request.ground.f1 = -5 * effort.response.w.f1 * hyp;
+//				attcon.request.ground.f2 = -5 * effort.response.w.f2 * hyp;
+//				attcon.request.ground.f3 = -5 * effort.response.w.f3 * hyp;
+
+
+				attcon.request.ground.f0 = 0;
+				attcon.request.ground.f1 = 0;
+				attcon.request.ground.f2 = 0;
+				attcon.request.ground.f3 = 0;
 
 	  		  }
 	  		  else ROS_INFO("Error calling ground calc service");
@@ -164,7 +212,7 @@ int main(int argc, char **argv)
 
 			  }
 			  else ROS_INFO(" DOH! ");
-			  ROS_INFO("End calcs");
+			  //ROS_INFO("End calcs");
 		  }
 
 
@@ -203,7 +251,7 @@ int main(int argc, char **argv)
 			  ROS_ERROR("Failed to call service servo_server");
 
 		  }
-		  ROS_INFO("Servos sent. Iteration: %d", counter);
+		  //ROS_INFO("Servos sent. Iteration: %d", counter);
 		  ros::spinOnce();
 		  loop_rate.sleep();
 	  }

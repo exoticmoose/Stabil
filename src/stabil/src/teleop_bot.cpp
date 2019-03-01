@@ -22,8 +22,8 @@ class TeleopBot {
 		ros::Publisher vel_pub_;
 		ros::Subscriber joy_sub_;
 
-		ros::Publisher latt_pub_;
-		ros::Publisher long_pub_;
+		ros::Publisher body_tilt_x_;
+		ros::Publisher body_tilt_y_;
 		ros::Subscriber imu_sub_;
 };
 
@@ -38,9 +38,9 @@ TeleopBot::TeleopBot(): linear_(1), angular_(2) {
 	vel_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 	joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &TeleopBot::joyCallback, this);
 
-	imu_sub_ = nh_.subscribe<sensor_msgs::Imu>("imu", 100, &TeleopBot::imuCallback, this);
-	latt_pub_ = nh_.advertise<std_msgs::Float64>("latitude_tilt", 1);
-	long_pub_ = nh_.advertise<std_msgs::Float64>("longitude_tilt", 1);
+	imu_sub_ = nh_.subscribe<sensor_msgs::Imu>("imu/data_raw", 100, &TeleopBot::imuCallback, this);
+	body_tilt_x_ = nh_.advertise<std_msgs::Float64>("body_tilt_x", 1);
+	body_tilt_y_ = nh_.advertise<std_msgs::Float64>("body_tilt_y", 1);
 }
 
 
@@ -60,15 +60,15 @@ void TeleopBot::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 }
 
 void TeleopBot::imuCallback(const sensor_msgs::Imu::ConstPtr& imu) {
-	std_msgs::Float64 latititude_tilt;
-	std_msgs::Float64 longitude_tilt;
+	std_msgs::Float64 body_tilt_x;
+	std_msgs::Float64 body_tilt_y;
 
 	ROS_INFO("IMU Callback");
-	latititude_tilt.data = 200 * imu->orientation.x;
-	longitude_tilt.data = 200 * imu->orientation.y;
+	body_tilt_x.data = atan(imu->orientation.x / imu->orientation.z);
+	body_tilt_y.data = atan(imu->orientation.y / imu->orientation.z);
 
-	latt_pub_.publish(latititude_tilt);
-	long_pub_.publish(longitude_tilt);
+	body_tilt_x_.publish(body_tilt_x);
+	body_tilt_y_.publish(body_tilt_y);
 }
 
 int main(int argc, char** argv)

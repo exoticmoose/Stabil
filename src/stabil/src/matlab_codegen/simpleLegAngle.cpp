@@ -50,8 +50,8 @@ void simpleLegAngle(double jsx, double jsy, const double offset_z[3], const
   /*  divide by 2 for center offset */
   /* ----- declared variables */
   /*  get desired body plane orientation */
-  body_angle_y = std::atan(jsx / 6.0 / 1.7320508075688772);
-  body_angle_x = std::atan(jsy / 6.0 / 1.7320508075688772);
+  body_angle_y = jsx;
+  body_angle_x = jsy;
   Rx[1] = 0.0;
   Rx[4] = std::cos(body_angle_x);
   Rx[7] = -std::sin(body_angle_x);

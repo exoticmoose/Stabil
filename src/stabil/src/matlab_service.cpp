@@ -10,10 +10,10 @@
 #include "stabil/AttitudeControl.h"
 #include "stabil/IMUEffort.h"
 
-#define LEG_LENGTH 14.0
-#define WHEEL_RADIUS 4.0
-#define BODY_DIM_X 25.0
-#define BODY_DIM_Y 21.0
+#define LEG_LENGTH 11.5
+#define WHEEL_RADIUS 0.01
+#define BODY_DIM_X 24.3
+#define BODY_DIM_Y 20.3
 
 
 
@@ -54,7 +54,7 @@ void main_tiltBalance() {
 }
 
 bool calcPose(stabil::AttitudeControl::Request &req, stabil::AttitudeControl::Response &res) {
-	ROS_INFO("Got data");
+	//ROS_INFO("Got data");
 	double offset[3] = {req.offset.x, req.offset.y, req.offset.z};
 	double ground[4] = {req.ground.f0, req.ground.f1, req.ground.f2, req.ground.f3};
 	double leg = 8;
@@ -70,13 +70,12 @@ bool calcPose(stabil::AttitudeControl::Request &req, stabil::AttitudeControl::Re
 	res.theta.f2 = theta[2];
 	res.theta.f3 = theta[3];
 
-
 	geometry_msgs::Point tmp;
 	for (uint8_t i = 0; i < 4; i++) {
 		tmp.x = pos[i];
 		tmp.y = pos[i + 4];
 		tmp.z = pos[i + 8];
-		ROS_INFO("Corner: %d (x: %f, y:%f, z:%f)", i, tmp.x, tmp.y, tmp.z);
+		//ROS_INFO("Corner: %d (x: %f, y:%f, z:%f)", i, tmp.x, tmp.y, tmp.z);
 		res.contact[i] = tmp;
 	}
 
@@ -87,6 +86,7 @@ bool calcGround(stabil::IMUEffort::Request &req, stabil::IMUEffort::Response &re
 
 	tiltBalance(req.x, req.y, 0, BODY_DIM_X, BODY_DIM_Y, &res.w.f0, &res.w.f1, &res.w.f2, &res.w.f3 );
 
+	ROS_INFO("(%f, %f) = Efforts: %f \t %f \t %f \t %f", req.x, req.y, res.w.f0, res.w.f1, res.w.f2, res.w.f3);
 	return true;
 }
 

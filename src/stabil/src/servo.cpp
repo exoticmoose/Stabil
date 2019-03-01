@@ -1,5 +1,5 @@
-#define BIG_STEP 35
-#define SMALL_STEP 10
+#define BIG_STEP 10
+#define SMALL_STEP 2
 
 #include "ros/ros.h"
 
@@ -38,7 +38,7 @@ void servo::sendNext() {
 			
 			if (curr_pw != next_pw) {
 				srv.request.request[my_id / 2] = next_pw; //TODO address <--> id mapping
-				ROS_INFO("Sending next=%d for %d", next_pw, my_id);
+				//ROS_INFO("Sending next=%d for %d", next_pw, my_id);
 				curr_pw = next_pw;
 			}
 	}
