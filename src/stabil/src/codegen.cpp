@@ -1,12 +1,12 @@
+#include <ros/ros.h>
+#include <geometry_msgs/Point.h>
+#include "stabil/QuadFloat.h"
+
 #include "rt_nonfinite.h"
 #include "simpleLegAngle.h"
 #include "simpleLegAngle_terminate.h"
 #include "simpleLegAngle_initialize.h"
 #include "tiltBalance.h"
-
-#include <ros/ros.h>
-#include <geometry_msgs/Point.h>
-#include "stabil/QuadFloat.h"
 //#include "stabil/AttitudeControl.h"
 //#include "stabil/IMUEffort.h"
 
@@ -43,15 +43,15 @@ void test_tiltBalance() {
 	double w[4];
 
 	tiltBalance(x, y, z, Dx, Dy, w);
-	ROS_INFO("Test efforts = %f, %f, %f, %f", w[0], w[1], w[2], w[3], w[4]);
+	ROS_INFO("Test efforts = %f, %f, %f, %f", w[0], w[1], w[2], w[3]);
 
 }
 
 void cg_calcPose(const double x, const double y, const double offset[], const double ground[], double theta[], double position[]) {
-	ROS_INFO("Called calcPose");
+	//ROS_INFO("Called calcPose");
 
 	simpleLegAngle(x, y, offset, ground, LEG_LENGTH, WHEEL_RADIUS, theta, position);
-	ROS_INFO("Thetas = %f, %f, %f, %f", theta[0], theta[1], theta[2], theta[3]);
+	//ROS_INFO("Thetas = %f, %f, %f, %f", theta[0], theta[1], theta[2], theta[3]);
 
 	geometry_msgs::Point tmp;
 	for (uint8_t i = 0; i < 4; i++) {
@@ -68,7 +68,7 @@ void cg_calcEfforts(const double x, const double y, double res[]) {
 
 	tiltBalance(x, y, 0, BODY_DIM_X, BODY_DIM_Y, res);
 
-	ROS_INFO("(%f, %f) = Efforts: %f \t %f \t %f \t %f", x, y, res[0], res[1], res[2], res[3]);
+	//ROS_INFO("(%f, %f) = Efforts: %f \t %f \t %f \t %f", x, y, res[0], res[1], res[2], res[3]);
 
 	return;
 }

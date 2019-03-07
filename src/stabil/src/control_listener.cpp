@@ -60,6 +60,9 @@ stabilBody::stabilBody() {
 	body_setpoint_x_ = nh_.advertise<std_msgs::Float64>("body_setpoint_x", 100);
 	body_setpoint_y_ = nh_.advertise<std_msgs::Float64>("body_setpoint_y", 100);
 
+	body_tilt_x_ = nh_.advertise<std_msgs::Float64>("body_tilt_x", 1);
+	body_tilt_y_ = nh_.advertise<std_msgs::Float64>("body_tilt_y", 1);
+
 	pid_x_ = nh_.subscribe("/tilt_x/control_effort", 1,
 			&stabilBody::pidCallbackX, this);
 	pid_y_ = nh_.subscribe("/tilt_y/control_effort", 1,
@@ -87,9 +90,9 @@ void charCallback(const std_msgs::String::ConstPtr& msg) {
 }
 
 void twistCallback(const geometry_msgs::Twist &twist) {
-	//ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
-	//ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
-	//ROS_INFO("----------------------");
+//	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+//	ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
+//	ROS_INFO("----------------------");
 
 	l_stick.x = twist.linear.x;
 	l_stick.y = twist.linear.y;
@@ -102,17 +105,17 @@ void twistCallback(const geometry_msgs::Twist &twist) {
 
 void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
 	//ROS_INFO("Control listener got IMU Data");
-	ROS_INFO("IMU Callback");
+	//ROS_INFO("IMU Callback");
 
 	imu_x = imu->orientation.x;
 	imu_y = imu->orientation.y;
-	ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
+	//ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
 
 	body_tilt_x.data = atan(imu->orientation.x / imu->orientation.z);
 	body_tilt_y.data = atan(imu->orientation.y / imu->orientation.z);
 	body_tilt_x_.publish(body_tilt_x);
 	body_tilt_y_.publish(body_tilt_y);
-	ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
+	//ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
 
 }
 
@@ -173,13 +176,17 @@ int main(int argc, char **argv) {
 	// ---------------------------------------
 	ROS_INFO("Starting main loop");
 
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(50);
 	int counter = 0;
 
 	while (ros::ok()) {
-		//ROS_INFO("Spun once: Loop start.");
+		ROS_INFO("Spun once: Loop start.");
 		jsx = fabs(l_stick.x) < 0.05 ? 0 : l_stick.x;
 		jsy = fabs(l_stick.y) < 0.05 ? 0 : l_stick.y;
+		jsx = atan(jsx / 6.0 / 1.7320508075688772);
+		jsy = atan(jsy / 6.0 / 1.7320508075688772);
+
+
 		bias_jsx = -1 * stabil.control_effort_x;
 		bias_jsy = -1 * stabil.control_effort_y;
 
@@ -188,12 +195,18 @@ int main(int argc, char **argv) {
 
 		// Limit calculation rates, but continue servo smoothing
 		counter++;
-		if (!(counter % 2)) {
+		if (!((counter + 1) % 2)) {
+			ROS_INFO("Calculations entered");
+			cg_calcEfforts(jsx, jsy, efforts);
 
-			cg_calcEfforts(stabil.imu_x, stabil.imu_y, efforts);
-
-			cg_calcPose(stabil.control_effort_x, stabil.control_effort_x,
+			cg_calcPose(jsx, jsy,
 					offset, ground, thetas, stabil.positions);
+
+
+//			cg_calcEfforts(stabil.imu_x, stabil.imu_y, efforts);
+//
+//			cg_calcPose(stabil.control_effort_x, stabil.control_effort_x,
+//					offset, ground, thetas, stabil.positions);
 
 		}
 
@@ -206,28 +219,33 @@ int main(int argc, char **argv) {
 //		}
 
 
-		servo_fl.setGoalAngle(thetas[0]);
-		servo_fr.setGoalAngle(thetas[1]);
-		servo_rl.setGoalAngle(thetas[2]);
-		servo_rr.setGoalAngle(thetas[3]);
+		if (!(counter % 2)) {
+			ROS_INFO("Servo operations entered");
+			servo_fl.setGoalAngle(thetas[0]);
+			servo_fr.setGoalAngle(thetas[1]);
+			servo_rl.setGoalAngle(thetas[2]);
+			servo_rr.setGoalAngle(thetas[3]);
 
-		servo_fl.calcNext();
-		servo_fr.calcNext();
-		servo_rl.calcNext();
-		servo_rr.calcNext();
+			servo_fl.calcNext();
+			servo_fr.calcNext();
+			servo_rl.calcNext();
+			servo_rr.calcNext();
 
-		servo_fl.sendNext();
-		servo_fr.sendNext();
-		servo_rl.sendNext();
-		servo_rr.sendNext();
+			servo_fl.sendNext();
+			servo_fr.sendNext();
+			servo_rl.sendNext();
+			servo_rr.sendNext();
 
 
-		if (servo_control.call(srv)) {
-			//ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);
-		} else {
-			ROS_ERROR("Failed to call service servo_control");
+			if (servo_control.call(srv)) {
+				//ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);
+			} else {
+				//ROS_ERROR("Failed to call service servo_control");
+				// TODO PUT BACK IN!
 
+			}
 		}
+
 		//ROS_INFO("Servos sent. Iteration: %d", counter);
 
 		spx.data = 0;			  //atan(jsx / 6.0 / 1.7320508075688772);
