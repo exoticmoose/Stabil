@@ -20,7 +20,7 @@
 
 /* Function Declarations */
 extern void tiltBalance(double x, double y, double z, double Dx, double Dy,
-  double *w0, double *w1, double *w2, double *w3);
+  double reaction[]);
 extern void tiltBalance_initialize();
 extern void tiltBalance_terminate();
 

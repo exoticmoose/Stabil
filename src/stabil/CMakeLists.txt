@@ -65,7 +65,19 @@ add_executable(network_server src/network_server.cpp)
 target_link_libraries(network_server ${catkin_LIBRARIES})
 add_dependencies(network_server stabil_gencpp)
 
-add_executable(control_listener src/control_listener.cpp src/servo.cpp)
+add_executable(
+	control_listener 
+	src/control_listener.cpp 
+	src/servo.cpp
+	src/codegen.cpp
+	src/matlab_codegen/simpleLegAngle_terminate.cpp
+	src/matlab_codegen/simpleLegAngle_initialize.cpp
+	src/matlab_codegen/simpleLegAngle.cpp
+	src/matlab_codegen/tiltBalance.cpp
+	src/matlab_codegen/rt_nonfinite.cpp
+	src/matlab_codegen/rtGetNaN.cpp
+	src/matlab_codegen/rtGetInf.cpp
+	)
 target_link_libraries(control_listener ${catkin_LIBRARIES})
 add_dependencies(control_listener stabil_gencpp)
 
@@ -76,23 +88,6 @@ add_dependencies(teleop_bot stabil_gencpp)
 add_executable(pca9685_server src/pca9685_server.cpp src/JHPWMPCA9685.cpp)
 target_link_libraries(pca9685_server ${catkin_LIBRARIES})
 add_dependencies(pca9685_server stabil_gencpp)
-
-add_executable(
-	matlab_service src/matlab_service.cpp
-	src/matlab_codegen/simpleLegAngle_terminate.cpp
-	src/matlab_codegen/simpleLegAngle_initialize.cpp
-	src/matlab_codegen/simpleLegAngle.cpp
-	src/matlab_codegen/tiltBalance.cpp
-	src/matlab_codegen/rt_nonfinite.cpp
-	src/matlab_codegen/rtGetNaN.cpp
-	src/matlab_codegen/rtGetInf.cpp
-)
-target_link_libraries(matlab_service ${catkin_LIBRARIES})
-add_dependencies(matlab_service stabil_gencpp)
-
-
-
-
 
 catkin_install_python(
 	PROGRAMS scripts/talker.py scripts/listener.py scripts/servo_client.py scripts/add_two_ints_client.py scripts/add_two_ints_server.py

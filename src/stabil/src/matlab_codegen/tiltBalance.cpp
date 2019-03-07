@@ -116,8 +116,7 @@ static double rt_atan2d_snf(double u0, double u1)
 /*
  * function [w0, w1, w2, w3] = tiltBalance(x, y, z, Dx, Dy)
  */
-void tiltBalance(double x, double y, double z, double Dx, double Dy, double *w0,
-                 double *w1, double *w2, double *w3)
+void tiltBalance(double x, double y, double z, double Dx, double Dy, double reaction[])
 {
   double W[9];
   int i;
@@ -134,7 +133,7 @@ void tiltBalance(double x, double y, double z, double Dx, double Dy, double *w0,
   double Vw[3];
   double alpha_w;
   int i0;
-  double reaction[4];
+  //double reaction[4]; TODO EDIT changed w(1...3) to reaction....
 
   /*   */
   /*  x = -1; */
@@ -223,16 +222,16 @@ void tiltBalance(double x, double y, double z, double Dx, double Dy, double *w0,
   /* 'tiltBalance:47' R3 = Awu * [F3 0]'; */
   /*  [R0 R1 R2 R3] */
   /* 'tiltBalance:50' w0 = reaction(1); */
-  *w0 = reaction[0];
-
-  /* 'tiltBalance:51' w1 = reaction(2); */
-  *w1 = reaction[1];
-
-  /* 'tiltBalance:52' w2 = reaction(3); */
-  *w2 = reaction[2];
-
-  /* 'tiltBalance:53' w3 = reaction(4); */
-  *w3 = reaction[3];
+//  *w0 = reaction[0];
+//
+//  /* 'tiltBalance:51' w1 = reaction(2); */
+//  *w1 = reaction[1];
+//
+//  /* 'tiltBalance:52' w2 = reaction(3); */
+//  *w2 = reaction[2];
+//
+//  /* 'tiltBalance:53' w3 = reaction(4); */
+//  *w3 = reaction[3];
 
   /* toc */
   /*  ---------- visualizing only below this line */
