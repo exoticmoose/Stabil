@@ -1,4 +1,4 @@
-## Stabil
+# Stabil
 
 Catkin workspace for Senior Design project, built for ROS primarily in C++
 
