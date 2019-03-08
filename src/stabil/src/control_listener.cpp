@@ -104,18 +104,18 @@ void twistCallback(const geometry_msgs::Twist &twist) {
 }
 
 void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
-	//ROS_INFO("Control listener got IMU Data");
+	ROS_INFO("Control listener got IMU Data");
 	//ROS_INFO("IMU Callback");
 
 	imu_x = imu->orientation.x;
 	imu_y = imu->orientation.y;
-	//ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
+	ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
 
 	body_tilt_x.data = atan(imu->orientation.x / imu->orientation.z);
 	body_tilt_y.data = atan(imu->orientation.y / imu->orientation.z);
 	body_tilt_x_.publish(body_tilt_x);
 	body_tilt_y_.publish(body_tilt_y);
-	//ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
+	ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
 
 }
 
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 	int counter = 0;
 
 	while (ros::ok()) {
-		ROS_INFO("Spun once: Loop start.");
+		//ROS_INFO("Spun once: Loop start.");
 		jsx = fabs(l_stick.x) < 0.05 ? 0 : l_stick.x;
 		jsy = fabs(l_stick.y) < 0.05 ? 0 : l_stick.y;
 		jsx = atan(jsx / 6.0 / 1.7320508075688772);
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
 		// Limit calculation rates, but continue servo smoothing
 		counter++;
 		if (!((counter + 1) % 2)) {
-			ROS_INFO("Calculations entered");
+			//ROS_INFO("Calculations entered");
 			cg_calcEfforts(bias_jsx, bias_jsy, efforts);
 
 			cg_calcPose(bias_jsx, bias_jsy,
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
 
 
 		if (!(counter % 2)) {
-			ROS_INFO("Servo operations entered");
+			//ROS_INFO("Servo operations entered");
 			servo_fl.setGoalAngle(thetas[0]);
 			servo_fr.setGoalAngle(thetas[1]);
 			servo_rl.setGoalAngle(thetas[2]);
