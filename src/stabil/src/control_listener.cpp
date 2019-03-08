@@ -197,9 +197,9 @@ int main(int argc, char **argv) {
 		counter++;
 		if (!((counter + 1) % 2)) {
 			ROS_INFO("Calculations entered");
-			cg_calcEfforts(jsx, jsy, efforts);
+			cg_calcEfforts(bias_jsx, bias_jsy, efforts);
 
-			cg_calcPose(jsx, jsy,
+			cg_calcPose(bias_jsx, bias_jsy,
 					offset, ground, thetas, stabil.positions);
 
 
