@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <stddef.h>
 #include <stdlib.h>
+#include <math.h>
 #include "servo.h"
 #include "control_listener.h"
 #include "codegen.h"
@@ -90,7 +91,7 @@ void charCallback(const std_msgs::String::ConstPtr& msg) {
 }
 
 void twistCallback(const geometry_msgs::Twist &twist) {
-//	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
 //	ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
 //	ROS_INFO("----------------------");
 
@@ -107,13 +108,15 @@ void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
 	ROS_INFO("Control listener got IMU Data");
 	//ROS_INFO("IMU Callback");
 
+	double w_sign = std::signbit(imu->orientation.w) ? -1.0f : 1.0f;
 	imu_x = imu->orientation.x;
 	imu_y = imu->orientation.y;
+
 	ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
 
-	body_tilt_x.data = atan(imu->orientation.x / imu->orientation.z);
-	body_tilt_y.data = atan(imu->orientation.y / imu->orientation.z);
-	body_tilt_x_.publish(body_tilt_x);
+	body_tilt_x.data = asin(imu->orientation.x * w_sign) * 10;
+	body_tilt_y.data = asin(imu->orientation.y * w_sign) * 10;
+	body_tilt_x_.publish(body_tilt_x); // scaling for PID
 	body_tilt_y_.publish(body_tilt_y);
 	ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
 
@@ -183,12 +186,15 @@ int main(int argc, char **argv) {
 		//ROS_INFO("Spun once: Loop start.");
 		jsx = fabs(l_stick.x) < 0.05 ? 0 : l_stick.x;
 		jsy = fabs(l_stick.y) < 0.05 ? 0 : l_stick.y;
-		jsx = atan(jsx / 6.0 / 1.7320508075688772);
-		jsy = atan(jsy / 6.0 / 1.7320508075688772);
+		jsx = 0;
+		jsy = 0;
+
+		bias_jsx = jsx - stabil.control_effort_x;
+		bias_jsy = jsy - stabil.control_effort_y;	
 
 
-		bias_jsx = -1 * stabil.control_effort_x;
-		bias_jsy = -1 * stabil.control_effort_y;
+		bias_jsx = atan(bias_jsx / 2);
+		bias_jsy = atan(bias_jsy / 2);
 
 		// Get "off the ground" metric acting as a dead-man switch
 		offset[2] = 8 + (-8 * r_stick.z);
@@ -253,6 +259,7 @@ int main(int argc, char **argv) {
 
 		stabil.body_setpoint_x_.publish(spx);
 		stabil.body_setpoint_y_.publish(spy);
+		ROS_INFO("Publishing setpoints: %f \t %f", spx.data, spy.data);
 
 		ros::spinOnce();
 		loop_rate.sleep();
