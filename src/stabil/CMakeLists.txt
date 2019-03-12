@@ -85,7 +85,7 @@ add_executable(teleop_bot src/teleop_bot.cpp)
 target_link_libraries(teleop_bot ${catkin_LIBRARIES})
 add_dependencies(teleop_bot stabil_gencpp)
 
-add_executable(pca9685_server src/pca9685_server.cpp src/JHPWMPCA9685.cpp)
+add_executable(pca9685_server src/pca9685_server.cpp src/JHPWMPCA9685.cpp src/jetsonGPIO.c)
 target_link_libraries(pca9685_server ${catkin_LIBRARIES})
 add_dependencies(pca9685_server stabil_gencpp)
 

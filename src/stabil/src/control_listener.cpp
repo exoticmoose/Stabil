@@ -161,6 +161,13 @@ int main(int argc, char **argv) {
 	srv.request.address[1] = 2;
 	srv.request.address[2] = 4;
 	srv.request.address[3] = 6;
+
+	srv.request.address[4] = 8;
+	srv.request.address[5] = 10;
+	srv.request.address[6] = 12;
+	srv.request.address[7] = 14;
+
+	srv.request.throttle = 0;
 	int pwm_req[8];
 
 	double offset[3] = { 0.0, 0.0, 0.0 };
@@ -172,6 +179,8 @@ int main(int argc, char **argv) {
 	double jsy;
 	double bias_jsx;
 	double bias_jsy;
+
+	double throttle;
 
 	std_msgs::Float64 spx;
 	std_msgs::Float64 spy;
@@ -242,6 +251,15 @@ int main(int argc, char **argv) {
 			servo_rl.sendNext();
 			servo_rr.sendNext();
 
+			// Throttle control request
+			throttle = fabs(r_stick.y) < 0.05 ? 0 : r_stick.y;
+
+			srv.request.throttle = throttle;
+			srv.request.request[4] = 3000;
+			srv.request.request[5] = 3000;
+			srv.request.request[6] = 3000;
+			srv.request.request[7] = 3000;
+
 
 			if (servo_control.call(srv)) {
 				//ROS_INFO("Success, sent %d : %d, got: %d", (int)srv.request.address, (int)srv.request.request, (int)srv.response.response);
@@ -259,7 +277,7 @@ int main(int argc, char **argv) {
 
 		stabil.body_setpoint_x_.publish(spx);
 		stabil.body_setpoint_y_.publish(spy);
-		ROS_INFO("Publishing setpoints: %f \t %f", spx.data, spy.data);
+		//ROS_INFO("Publishing setpoints: %f \t %f", spx.data, spy.data);
 
 		ros::spinOnce();
 		loop_rate.sleep();
