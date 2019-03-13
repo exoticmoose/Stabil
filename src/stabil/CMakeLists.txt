@@ -16,6 +16,8 @@ add_message_files(
   FILES
   Num.msg
   QuadFloat.msg
+  rosObject.msg
+  rosObjectHolder.msg
 )
 
 
