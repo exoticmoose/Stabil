@@ -15,5 +15,7 @@
 #include "stabil/PCA9685.h"
 #include "stabil/AttitudeControl.h"
 #include "stabil/IMUEffort.h"
+#include "stabil/rosObject.h"
+#include "stabil/rosObjectHolder.h"
 
 #endif

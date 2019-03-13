@@ -29,11 +29,13 @@ private:
 	void imuCallback(const sensor_msgs::Imu::ConstPtr& imu);
 	void pidCallbackX(const std_msgs::Float64 &val);
 	void pidCallbackY(const std_msgs::Float64 &val);
+	void cvCallback(const stabil::rosObjectHolder  &data);
 
 	ros::NodeHandle nh_;
 	ros::Subscriber imu_sub_;
 	ros::Subscriber pid_x_;
 	ros::Subscriber pid_y_;
+	ros::Subscriber cv_sub_;
 
 public:
 	stabilBody();
@@ -68,8 +70,10 @@ stabilBody::stabilBody() {
 			&stabilBody::pidCallbackX, this);
 	pid_y_ = nh_.subscribe("/tilt_y/control_effort", 1,
 			&stabilBody::pidCallbackY, this);
-	imu_sub_ = nh_.subscribe("imu/data_raw", 100,
+	imu_sub_ = nh_.subscribe("imu/data_raw", 1,
 			&stabilBody::imuCallback, this);
+	cv_sub_ = nh_.subscribe("/rosObjectHolder", 1,
+			&stabilBody::cvCallback, this);
 
 	body_tilt_x.data = 0;
 	body_tilt_y.data = 0;
@@ -90,8 +94,14 @@ void charCallback(const std_msgs::String::ConstPtr& msg) {
 			atoi(msg->data.c_str()));
 }
 
+void stabilBody::cvCallback(const stabil::rosObjectHolder &data) {
+
+	ROS_INFO("Heard from CV");
+
+}
+
 void twistCallback(const geometry_msgs::Twist &twist) {
-	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+	//ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
 //	ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
 //	ROS_INFO("----------------------");
 
@@ -105,7 +115,7 @@ void twistCallback(const geometry_msgs::Twist &twist) {
 }
 
 void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
-	ROS_INFO("Control listener got IMU Data");
+	//ROS_INFO("Control listener got IMU Data");
 	//ROS_INFO("IMU Callback");
 
 	double w_sign = std::signbit(imu->orientation.w) ? -1.0f : 1.0f;
