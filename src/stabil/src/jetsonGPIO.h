@@ -95,21 +95,20 @@ enum jetsonTX2GPIONumber {
        gpio297 = 297,      // J21 - Pin 32 - GPIO12
        gpio467 = 467,      // J21 - Pin 36 - GPIO16
        gpio394 = 394,      // J21 - Pin 38 - GPIO20
-       gpio393 = 393,      // J21 - Pin 40 - GPIO21
-	   gpio429 = 429,
-	   gpio428 = 428
+       gpio393 = 393      // J21 - Pin 40 - GPIO21
+
 } ;
 
 
-int gpioExport ( jetsonGPIO gpio ) ;
-int gpioUnexport ( jetsonGPIO gpio ) ;
-int gpioSetDirection ( jetsonGPIO, pinDirection out_flag ) ;
-int gpioSetValue ( jetsonGPIO gpio, pinValue value ) ;
-int gpioGetValue ( jetsonGPIO gpio, unsigned int *value ) ;
-int gpioSetEdge ( jetsonGPIO gpio, char *edge ) ;
-int gpioOpen ( jetsonGPIO gpio ) ;
+int gpioExport ( unsigned int gpio ) ;
+int gpioUnexport ( unsigned int gpio ) ;
+int gpioSetDirection ( unsigned int, unsigned int out_flag ) ;
+int gpioSetValue ( unsigned int gpio, unsigned int value ) ;
+int gpioGetValue ( unsigned int gpio, unsigned int *value ) ;
+int gpioSetEdge ( unsigned int gpio, char *edge ) ;
+int gpioOpen ( unsigned int gpio ) ;
 int gpioClose ( int fileDescriptor ) ;
-int gpioActiveLow ( jetsonGPIO gpio, unsigned int value ) ;
+int gpioActiveLow ( unsigned int gpio, unsigned int value ) ;
 
 
 

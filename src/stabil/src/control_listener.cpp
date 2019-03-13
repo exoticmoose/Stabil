@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
 		bias_jsy = atan(bias_jsy / 2);
 
 		// Get "off the ground" metric acting as a dead-man switch
-		offset[2] = 8 + (-8 * r_stick.z);
+		offset[2] = 12 + (-12 * r_stick.z);
 
 		// Limit calculation rates, but continue servo smoothing
 		counter++;
@@ -255,10 +255,11 @@ int main(int argc, char **argv) {
 			throttle = fabs(r_stick.y) < 0.05 ? 0 : r_stick.y;
 
 			srv.request.throttle = throttle;
-			srv.request.request[4] = 3000;
-			srv.request.request[5] = 3000;
-			srv.request.request[6] = 3000;
-			srv.request.request[7] = 3000;
+			throttle = fabs(throttle) * 3000;
+			srv.request.request[4] = throttle;
+			srv.request.request[5] = throttle;
+			srv.request.request[6] = throttle;
+			srv.request.request[7] = throttle;
 
 
 			if (servo_control.call(srv)) {

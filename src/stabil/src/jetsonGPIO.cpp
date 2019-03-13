@@ -14,7 +14,7 @@
 // gpioExport
 // Export the given gpio to userspace;
 // Return: Success = 0 ; otherwise open file error
-int gpioExport ( jetsonGPIO gpio )
+int gpioExport ( unsigned int gpio )
 {
     int fileDescriptor, length;
     char commandBuffer[MAX_BUF];
@@ -42,7 +42,7 @@ int gpioExport ( jetsonGPIO gpio )
 // gpioUnexport
 // Unexport the given gpio from userspace
 // Return: Success = 0 ; otherwise open file error
-int gpioUnexport ( jetsonGPIO gpio )
+int gpioUnexport ( unsigned int gpio )
 {
     int fileDescriptor, length;
     char commandBuffer[MAX_BUF];
@@ -67,7 +67,7 @@ int gpioUnexport ( jetsonGPIO gpio )
 // gpioSetDirection
 // Set the direction of the GPIO pin 
 // Return: Success = 0 ; otherwise open file error
-int gpioSetDirection ( jetsonGPIO gpio, unsigned int out_flag )
+int gpioSetDirection ( unsigned int gpio, unsigned int out_flag )
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
@@ -102,7 +102,7 @@ int gpioSetDirection ( jetsonGPIO gpio, unsigned int out_flag )
 // gpioSetValue
 // Set the value of the GPIO pin to 1 or 0
 // Return: Success = 0 ; otherwise open file error
-int gpioSetValue ( jetsonGPIO gpio, unsigned int value )
+int gpioSetValue ( unsigned int gpio, unsigned int value )
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
@@ -137,7 +137,7 @@ int gpioSetValue ( jetsonGPIO gpio, unsigned int value )
 // gpioGetValue
 // Get the value of the requested GPIO pin ; value return is 0 or 1
 // Return: Success = 0 ; otherwise open file error
-int gpioGetValue ( jetsonGPIO gpio, unsigned int *value)
+int gpioGetValue ( unsigned int gpio, unsigned int *value)
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
@@ -174,7 +174,7 @@ int gpioGetValue ( jetsonGPIO gpio, unsigned int *value)
 // Set the edge of the GPIO pin
 // Valid edges: 'none' 'rising' 'falling' 'both'
 // Return: Success = 0 ; otherwise open file error
-int gpioSetEdge ( jetsonGPIO gpio, char *edge )
+int gpioSetEdge ( unsigned int gpio, char *edge )
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
@@ -201,7 +201,7 @@ int gpioSetEdge ( jetsonGPIO gpio, char *edge )
 // gpioOpen
 // Open the given pin for reading
 // Returns the file descriptor of the named pin
-int gpioOpen( jetsonGPIO gpio )
+int gpioOpen( unsigned int gpio )
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
@@ -228,7 +228,7 @@ int gpioClose ( int fileDescriptor )
 // gpioActiveLow
 // Set the active_low attribute of the GPIO pin to 1 or 0
 // Return: Success = 0 ; otherwise open file error
-int gpioActiveLow ( jetsonGPIO gpio, unsigned int value )
+int gpioActiveLow ( unsigned int gpio, unsigned int value )
 {
     int fileDescriptor;
     char commandBuffer[MAX_BUF];
