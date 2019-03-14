@@ -97,6 +97,7 @@ void charCallback(const std_msgs::String::ConstPtr& msg) {
 void stabilBody::cvCallback(const stabil::rosObjectHolder &data) {
 
 	ROS_INFO("Heard from CV");
+	
 
 }
 

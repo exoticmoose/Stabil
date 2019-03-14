@@ -1,5 +1,5 @@
-#define BIG_STEP 60
-#define SMALL_STEP 10
+#define BIG_STEP 50
+#define SMALL_STEP 20
 
 #include "ros/ros.h"
 
