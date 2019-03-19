@@ -1,29 +1,29 @@
 <launch>
     <node name="controller" pkg="pid" type="controller" ns="tilt_x" output="screen" >
-      <param name="Kp" value="0.0" />
-      <param name="Ki" value="0.0" />
-      <param name="Kd" value="0.0" />
-      <param name="upper_limit" value="10" />
-      <param name="lower_limit" value="-10" />
-      <param name="windup_limit" value="10" />
+      <param name="Kp" value="-0.21" />
+      <param name="Ki" value="-1.4" />
+      <param name="Kd" value="-0.001" />
+      <param name="upper_limit" value="1" />
+      <param name="lower_limit" value="-1" />
+      <param name="windup_limit" value="0.5" />
       <param name="max_loop_frequency" value="50.0" />
       <param name="min_loop_frequency" value="50.0" />
       <remap from="setpoint" to="/body_setpoint_x" />
-      <remap from="state" to="/body_tilt_y" />
+      <remap from="state" to="/body_tilt_x" />
      </node>
 
 
     <node name="controller" pkg="pid" type="controller" ns="tilt_y" output="screen" >
-      <param name="Kp" value="0.0" />
-      <param name="Ki" value="0.0" />
-      <param name="Kd" value="0.0" />
+      <param name="Kp" value="-0.2" />
+      <param name="Ki" value="-1.4" />
+      <param name="Kd" value="-0.001" />
       <param name="upper_limit" value="1.0" />
       <param name="lower_limit" value="-1.0" />
-      <param name="windup_limit" value="1" />
+      <param name="windup_limit" value="0.5" />
       <param name="max_loop_frequency" value="50.0" />
       <param name="min_loop_frequency" value="50.0" />
       <remap from="setpoint" to="/body_setpoint_y" />
-      <remap from="state" to="/body_tilt_x" />
+      <remap from="state" to="/body_tilt_y" />
       
      </node>
 

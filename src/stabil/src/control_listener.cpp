@@ -4,9 +4,8 @@
 #include <math.h>
 #include "servo.h"
 #include "control_listener.h"
+#include "control_structures.h"
 #include "codegen.h"
-
-#define PI 3.14159265359
 
 struct xyz {
 	float x;
@@ -23,86 +22,13 @@ servo servo_fr = servo(2, 2850, 450, 1.5 * PI, 0);
 servo servo_rl = servo(4, 2780, 440, 1.5 * PI, 1);
 servo servo_rr = servo(6, 2800, 550, 1.5 * PI, 0);
 
-class stabilBody {
-
-private:
-	void imuCallback(const sensor_msgs::Imu::ConstPtr& imu);
-	void pidCallbackX(const std_msgs::Float64 &val);
-	void pidCallbackY(const std_msgs::Float64 &val);
-	void cvCallback(const stabil::rosObjectHolder  &data);
-
-	ros::NodeHandle nh_;
-	ros::Subscriber imu_sub_;
-	ros::Subscriber pid_x_;
-	ros::Subscriber pid_y_;
-	ros::Subscriber cv_sub_;
-
-public:
-	stabilBody();
-
-	ros::Publisher body_tilt_x_;
-	ros::Publisher body_tilt_y_;
-	ros::Publisher body_setpoint_x_;
-	ros::Publisher body_setpoint_y_;
-
-	std_msgs::Float64 body_tilt_x;
-	std_msgs::Float64 body_tilt_y;
-
-	double control_effort_x;
-	double control_effort_y;
-
-	double imu_x;
-	double imu_y;
-
-	double positions[12];
-};
-
-stabilBody::stabilBody() {
+bool proximity;
+float proximity_last = 999999999999999999;
 
 
-	body_setpoint_x_ = nh_.advertise<std_msgs::Float64>("body_setpoint_x", 100);
-	body_setpoint_y_ = nh_.advertise<std_msgs::Float64>("body_setpoint_y", 100);
-
-	body_tilt_x_ = nh_.advertise<std_msgs::Float64>("body_tilt_x", 1);
-	body_tilt_y_ = nh_.advertise<std_msgs::Float64>("body_tilt_y", 1);
-
-	pid_x_ = nh_.subscribe("/tilt_x/control_effort", 1,
-			&stabilBody::pidCallbackX, this);
-	pid_y_ = nh_.subscribe("/tilt_y/control_effort", 1,
-			&stabilBody::pidCallbackY, this);
-	imu_sub_ = nh_.subscribe("imu/data_raw", 1,
-			&stabilBody::imuCallback, this);
-	cv_sub_ = nh_.subscribe("/rosObjectHolder", 1,
-			&stabilBody::cvCallback, this);
-
-	body_tilt_x.data = 0;
-	body_tilt_y.data = 0;
-
-	control_effort_x = 0;
-	control_effort_y = 0;
-
-	imu_x = 0;
-	imu_y = 0;
-	for (char i = 0; i < 12; i++) {
-		positions[i] = 0.0;
-	}
-
-}
-
-void charCallback(const std_msgs::String::ConstPtr& msg) {
-	ROS_INFO("I heard a message: \"%s\" ... data = %d", msg->data.c_str(),
-			atoi(msg->data.c_str()));
-}
-
-void stabilBody::cvCallback(const stabil::rosObjectHolder &data) {
-
-	ROS_INFO("Heard from CV");
-	
-
-}
 
 void twistCallback(const geometry_msgs::Twist &twist) {
-	//ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
+//	ROS_INFO("Got linear  twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.linear.x, (float)twist.linear.y, (float)twist.linear.z);
 //	ROS_INFO("Got angular twist data... X: %+4.3f Y: %+4.3f Z: %+4.3f", (float)twist.angular.x, (float)twist.angular.y, (float)twist.angular.z);
 //	ROS_INFO("----------------------");
 
@@ -113,34 +39,6 @@ void twistCallback(const geometry_msgs::Twist &twist) {
 	r_stick.x = twist.angular.x;
 	r_stick.y = twist.angular.y;
 	r_stick.z = twist.angular.z;
-}
-
-void stabilBody::imuCallback(const sensor_msgs::Imu::ConstPtr &imu) {
-	//ROS_INFO("Control listener got IMU Data");
-	//ROS_INFO("IMU Callback");
-
-	double w_sign = std::signbit(imu->orientation.w) ? -1.0f : 1.0f;
-	imu_x = imu->orientation.x;
-	imu_y = imu->orientation.y;
-
-	ROS_INFO("IMU: X Y = %f \t %f", imu_x, imu_y);
-
-	body_tilt_x.data = asin(imu->orientation.x * w_sign) * 10;
-	body_tilt_y.data = asin(imu->orientation.y * w_sign) * 10;
-	body_tilt_x_.publish(body_tilt_x); // scaling for PID
-	body_tilt_y_.publish(body_tilt_y);
-	ROS_INFO("Publishing tilt X Y: %f \t %f", body_tilt_x.data, body_tilt_y.data);
-
-}
-
-void stabilBody::pidCallbackX(const std_msgs::Float64 &val) {
-	control_effort_x = val.data;
-	ROS_INFO("PID effort X = %f", control_effort_x);
-}
-
-void stabilBody::pidCallbackY(const std_msgs::Float64 &val) {
-	control_effort_y = val.data;
-	ROS_INFO("PID effort X = %f", control_effort_y);
 }
 
 int main(int argc, char **argv) {
@@ -158,10 +56,10 @@ int main(int argc, char **argv) {
 	// --------------------
 
 	stabilBody stabil;
+	remoteController rc;
+
 
 	ros::NodeHandle n;
-	ros::Subscriber char_sub_ = n.subscribe("remote_cmd_char", 1000,
-			charCallback);
 	ros::Subscriber twist_sub_ = n.subscribe("cmd_vel", 1000, twistCallback);
 
 	ros::NodeHandle clientNode;
@@ -192,6 +90,10 @@ int main(int argc, char **argv) {
 	double bias_jsy;
 
 	double throttle;
+	int diff_left;
+	int diff_right;
+	
+	ros::WallTime time;
 
 	std_msgs::Float64 spx;
 	std_msgs::Float64 spy;
@@ -199,30 +101,76 @@ int main(int argc, char **argv) {
 	// ---------------------------------------
 	ROS_INFO("Starting main loop");
 
-	ros::Rate loop_rate(50);
+	ros::Rate loop_rate(40);
 	int counter = 0;
+	int lastObj = 0;
 
 	while (ros::ok()) {
-		//ROS_INFO("Spun once: Loop start.");
-		jsx = fabs(l_stick.x) < 0.05 ? 0 : l_stick.x;
-		jsy = fabs(l_stick.y) < 0.05 ? 0 : l_stick.y;
-		jsx = 0;
-		jsy = 0;
-
-		bias_jsx = jsx - stabil.control_effort_x;
-		bias_jsy = jsy - stabil.control_effort_y;	
-
-
-		bias_jsx = atan(bias_jsx / 2);
-		bias_jsy = atan(bias_jsy / 2);
-
-		// Get "off the ground" metric acting as a dead-man switch
-		offset[2] = 12 + (-12 * r_stick.z);
+		
+		
 
 		// Limit calculation rates, but continue servo smoothing
 		counter++;
-		if (!((counter + 1) % 2)) {
+		if (proximity) lastObj++;
+		else lastObj = 0;
+		if (!((counter + 1) % 1)) {
 			//ROS_INFO("Calculations entered");
+			if (rc.remoteActive) {
+				//ROS_INFO("Remote control activate...");
+				jsx = 0;
+				jsy = 0;
+				bias_jsx = 0 - stabil.control_effort_x;
+				bias_jsy = 0 - stabil.control_effort_y;
+				offset[2] = 18;
+				throttle = rc.getNextThrottle();
+				//ROS_INFO("Got throttle!");
+				
+			}
+			else {
+				jsx = fabs(l_stick.x) < 0.1 ? 0 : (l_stick.x > 0 ? l_stick.x - 0.1 : l_stick.x + 0.1) * 0.50;
+				jsy = fabs(l_stick.y) < 0.1 ? 0 : (l_stick.y > 0 ? l_stick.y - 0.1 : l_stick.y + 0.1) * 0.50;
+				
+				bias_jsx = jsx - stabil.control_effort_x;
+				bias_jsy = jsy - stabil.control_effort_y;	
+				
+				throttle = fabs(r_stick.y) < 0.05 ? 0 : (r_stick.y > 0 ? r_stick.y - 0.05 : r_stick.y + 0.05);	
+
+				// Get "off the ground" metric acting as a dead-man switch
+				offset[2] = 12 + (-12 * r_stick.z);		
+				
+			}
+			
+			
+			proximity_last++;
+			if (proximity && proximity_last > 100) {
+				proximity = false;
+				ROS_INFO("last timeout");
+				//ROS_INFO("Timer prximity timout: %f versus %f", time.toSec(), proximity_last);
+			}
+			
+			
+			
+			
+			if (proximity) {
+				ROS_INFO("Limiting throttle due to proximity");
+				if (throttle > 0) throttle = 0;
+			} //else ROS_INFO("Not limiting throttle!")
+			
+			
+			int tmpThrottle = fabs(throttle) * 4000;
+			bias_jsx = atan(bias_jsx / 2);
+			bias_jsy = atan(bias_jsy / 2);
+			
+			if (jsx > 0) {
+				diff_left = tmpThrottle  - 7000 * jsx;
+				diff_right = tmpThrottle;
+			}
+			else {
+				diff_right = tmpThrottle + 7000 * jsx;
+				diff_left = tmpThrottle;
+			}
+			
+			
 			cg_calcEfforts(bias_jsx, bias_jsy, efforts);
 
 			cg_calcPose(bias_jsx, bias_jsy,
@@ -236,16 +184,8 @@ int main(int argc, char **argv) {
 
 		}
 
-//		ROS_INFO("Thetas: %f, %f, %f, %f",
-//			thetas[0], thetas[1], thetas[2], thetas[3] );
-//		for (int i = 0; i < 4; i++) {
-//			ROS_INFO("Contact %d: (%f, %f, %f)", i,
-//				stabil.positions[0], stabil.positions[1],
-//				stabil.positions[2], stabil.positions[3]);
-//		}
 
-
-		if (!(counter % 2)) {
+		if (!(counter % 1)) {
 			//ROS_INFO("Servo operations entered");
 			servo_fl.setGoalAngle(thetas[0]);
 			servo_fr.setGoalAngle(thetas[1]);
@@ -262,15 +202,11 @@ int main(int argc, char **argv) {
 			servo_rl.sendNext();
 			servo_rr.sendNext();
 
-			// Throttle control request
-			throttle = fabs(r_stick.y) < 0.05 ? 0 : r_stick.y;
-
-			srv.request.throttle = throttle;
-			throttle = fabs(throttle) * 3000;
-			srv.request.request[4] = throttle;
-			srv.request.request[5] = throttle;
-			srv.request.request[6] = throttle;
-			srv.request.request[7] = throttle;
+			srv.request.throttle = throttle * -1;
+			srv.request.request[4] = diff_left;
+			srv.request.request[5] = diff_left;
+			srv.request.request[6] = diff_right;
+			srv.request.request[7] = diff_right;
 
 
 			if (servo_control.call(srv)) {
