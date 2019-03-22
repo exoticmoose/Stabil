@@ -70,6 +70,7 @@ add_dependencies(network_server stabil_gencpp)
 add_executable(
 	control_listener 
 	src/control_listener.cpp 
+	src/control_structures.cpp
 	src/servo.cpp
 	src/codegen.cpp
 	src/matlab_codegen/simpleLegAngle_terminate.cpp
